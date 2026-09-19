@@ -6845,7 +6845,15 @@ static struct ggml_tensor * ggml_fused_mul_unary_impl(
         result->src[1] = b;
         return result;
     }
+#if !GGML_USE_IQK_MULMAT
+    if (op != GGML_UNARY_OP_GELU && op != GGML_UNARY_OP_RELU &&
+        op != GGML_UNARY_OP_SILU && op != GGML_UNARY_OP_SIGMOID) {
+        GGML_ABORT("ggml_fused_mul_unary unsupported unary op %d (%s) for non-IQK builds; requires a build with GGML_IQK_MUL_MAT",
+                   (int) op, (op >= 0 && op < GGML_UNARY_OP_COUNT) ? ggml_unary_op_name(op) : "?");
+    }
+#else
     GGML_ASSERT(op == GGML_UNARY_OP_GELU || op == GGML_UNARY_OP_RELU || op == GGML_UNARY_OP_SILU || op == GGML_UNARY_OP_SIGMOID);
+#endif
 
     bool is_node = false;
 
