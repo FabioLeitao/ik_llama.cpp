@@ -944,10 +944,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_q4_K,
         .from_float_ref           = (ggml_from_float_t) quantize_row_q4_K_ref,
         .vec_dot                  = ggml_vec_dot_q4_K_q8_K,
+#if GGML_USE_IQK_MULMAT
 #ifdef __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_1_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 0,
@@ -974,10 +978,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_q5_K,
         .from_float_ref           = (ggml_from_float_t) quantize_row_q5_K_ref,
         .vec_dot                  = ggml_vec_dot_q5_K_q8_K,
+#if GGML_USE_IQK_MULMAT
 #ifdef __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_1_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 0,
@@ -1004,12 +1012,15 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_q6_K,
         .from_float_ref           = (ggml_from_float_t) quantize_row_q6_K_ref,
         .vec_dot                  = ggml_vec_dot_q6_K_q8_K,
+#if GGML_USE_IQK_MULMAT
 #ifdef __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
 #endif
-//        .vec_dot_type             = GGML_TYPE_Q8_K,
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
+#endif
         .nrows                    = 1,
         .row_meta_size            = 0,
     },
@@ -1282,10 +1293,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq4_nl,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq4_nl_ref,
         .vec_dot                  = ggml_vec_dot_iq4_nl_q8_0,
+#if GGML_USE_IQK_MULMAT
 #if __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_0,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 0,
@@ -1312,7 +1327,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_mxfp4,
         .from_float_ref           = (ggml_from_float_t)quantize_row_mxfp4_ref,
         .vec_dot                  = vec_dot_mxfp4_q8_0_x4,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
@@ -1329,7 +1344,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_mxfp4_r8,
         .from_float_ref           = (ggml_from_float_t)quantize_row_mxfp4_r8_ref,
         .vec_dot                  = vec_dot_mxfp4_r8_q8_2_x4,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
@@ -1359,7 +1374,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq4_ks_r4,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq4_ks_r4_ref,
         .vec_dot                  = vec_dot_iq4_ks_r4_q8_k,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_K32,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_K,
@@ -1376,7 +1391,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq5_ks_r4,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq5_ks_r4_ref,
         .vec_dot                  = vec_dot_iq5_ks_r4_q8_k,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_K32,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_K,
@@ -1607,10 +1622,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq1_kt,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq1_kt_ref,
         .vec_dot                  = vec_dot_iq1_kt_q8_k,
+#if GGML_USE_IQK_MULMAT
 #if defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 4,
@@ -1624,10 +1643,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq2_kt,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq2_kt_ref,
         .vec_dot                  = vec_dot_iq2_kt_q8_k,
+#if GGML_USE_IQK_MULMAT
 #if defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 4,
@@ -1641,10 +1664,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq3_kt,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq3_kt_ref,
         .vec_dot                  = vec_dot_iq3_kt_q8_k,
+#if GGML_USE_IQK_MULMAT
 #if defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
 //#ifdef __ARM_NEON
 //        .vec_dot_type             = GGML_TYPE_F16,
@@ -1663,10 +1690,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq4_kt,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq4_kt_ref,
         .vec_dot                  = vec_dot_iq4_kt_q8_k,
+#if GGML_USE_IQK_MULMAT
 #if defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 4,
@@ -1680,7 +1711,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_q1_0_g128,
         .from_float_ref           = (ggml_from_float_t)quantize_row_q1_0_g128_ref,
         .vec_dot                  = vec_dot_q1_0_g128_q8_0,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
@@ -24386,6 +24417,20 @@ static void ggml_compute_forward_delta_net_f32(
     const int ith = params->ith;
     const int nth = params->nth;
 
+    // v, g and beta arrive as permuted (non-contiguous) views - see delta_net::build_delta_net()
+    // in src/llama-delta-net.cpp - so every access below goes through the tensor strides.
+    // Logical shapes: v = [head_dim, n_tokens, n_heads, n_seqs], g = [n_tokens, 1, n_heads, n_seqs],
+    // beta = [1, n_tokens, n_heads, n_seqs]. Same convention as ggml_compute_forward_kda_f32().
+    const size_t vnb1 = src2->nb[1]/sizeof(float);
+    const size_t vnb2 = src2->nb[2]/sizeof(float);
+    const size_t vnb3 = src2->nb[3]/sizeof(float);
+    const size_t gnb0 = src3->nb[0]/sizeof(float);
+    const size_t gnb2 = src3->nb[2]/sizeof(float);
+    const size_t gnb3 = src3->nb[3]/sizeof(float);
+    const size_t bnb1 = src4->nb[1]/sizeof(float);
+    const size_t bnb2 = src4->nb[2]/sizeof(float);
+    const size_t bnb3 = src4->nb[3]/sizeof(float);
+
     int repeat_type = dst->op_params[0];
     const int64_t state_step_stride = head_dim * head_dim * n_heads * n_seqs;
     // src7 is the slot the fused-away copy would have written
@@ -24431,13 +24476,15 @@ static void ggml_compute_forward_delta_net_f32(
         const int64_t head_idx  = h_idx % n_heads;
         const int64_t head_idx_kq = repeat_type == 0 ? head_idx / gqa_ratio : head_idx % (n_heads/gqa_ratio);
 
-        const int64_t qkv_head_offset  = batch_idx * (head_dim * n_tokens * n_heads) + head_idx * (head_dim * n_tokens);
         const int64_t qkv_head_offset_kq = batch_idx * (head_dim * n_tokens * n_heads/gqa_ratio) + head_idx_kq * (head_dim * n_tokens);
         const int64_t qkv_token_stride = head_dim;
-        const int64_t g_head_offset    = batch_idx * (n_tokens * n_heads) + head_idx * n_tokens;
         const int64_t state_head_offset = batch_idx * (head_dim * head_dim * n_heads) + head_idx * (head_dim * head_dim);
         const int64_t out_head_offset  = batch_idx * (head_dim * n_heads * n_tokens) + head_idx * head_dim;
         const int64_t out_token_stride = head_dim * n_heads;
+
+        const float * v_head    = v_data    + batch_idx * vnb3 + head_idx * vnb2;
+        const float * g_head    = g_data    + batch_idx * gnb3 + head_idx * gnb2;
+        const float * beta_head = beta_data + batch_idx * bnb3 + head_idx * bnb2;
 
         float * state = state_working + state_head_offset;
         for (int64_t i = 0; i < head_dim * head_dim; ++i) {
@@ -24449,10 +24496,10 @@ static void ggml_compute_forward_delta_net_f32(
         for (int64_t t = 0; t < n_tokens; ++t) {
             const float * q_t = q_data + qkv_head_offset_kq + t * qkv_token_stride;
             const float * k_t = k_data + qkv_head_offset_kq + t * qkv_token_stride;
-            const float * v_t = v_data + qkv_head_offset + t * qkv_token_stride;
+            const float * v_t = v_head + t * vnb1;
 
-            const float g_val    = g_data[g_head_offset + t];
-            const float beta_raw = beta_data[g_head_offset + t];
+            const float g_val    = g_head[t * gnb0];
+            const float beta_raw = beta_head[t * bnb1];
 
             float q_norm_sq = 0.0f;
             float k_norm_sq = 0.0f;
