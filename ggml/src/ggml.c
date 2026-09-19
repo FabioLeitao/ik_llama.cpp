@@ -3860,6 +3860,41 @@ inline static __m128 ggml_v_softcap(__m128 x, float s_before, float s_after) {
     return _mm_mul_ps(th, _mm_set1_ps(s_after));
 }
 
+inline static void ggml_vec_sigmoid_mul_f32(int n, const float * x, const float * y, float * z) {
+    const __m128 zero = _mm_setzero_ps();
+    const __m128 one = _mm_set1_ps(1.0f);
+    int i = 0;
+    _Pragma("GCC unroll 4")
+    for ( ; i + 3 < n; i += 4) {
+        __m128 vx = _mm_loadu_ps(x + i);
+        __m128 vy = _mm_loadu_ps(y + i);
+        __m128 exp_vx = ggml_v_expf(_mm_sub_ps(zero, vx));
+        __m128 denom  = _mm_add_ps(one, exp_vx);
+        __m128 result = _mm_div_ps(vy, denom);
+        _mm_storeu_ps(z + i, result);
+    }
+    for (; i < n; ++i) {
+        z[i] = y[i]/(1.0f + expf(-x[i]));
+    }
+}
+
+inline static void ggml_vec_simd_sigmoid_f32(int n, const float * x, float * y) {
+    const __m128 zero = _mm_setzero_ps();
+    const __m128 one = _mm_set1_ps(1.0f);
+    int i = 0;
+    _Pragma("GCC unroll 4")
+    for ( ; i + 3 < n; i += 4) {
+        __m128 vx = _mm_loadu_ps(x + i);
+        __m128 exp_vx = ggml_v_expf(_mm_sub_ps(zero, vx));
+        __m128 denom  = _mm_add_ps(one, exp_vx);
+        __m128 result = _mm_div_ps(one, denom);
+        _mm_storeu_ps(y + i, result);
+    }
+    if (i < n) {
+        ggml_vec_sigmoid_f32(n - i, y + i, x + i);
+    }
+}
+
 #endif // __ARM_NEON / __AVX2__ / __SSE2__
 
 static void ggml_vec_silu_f32(const int n, float * y, const float * x) {
