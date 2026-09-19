@@ -2384,6 +2384,9 @@ void vec_dot_iq2_kl_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
         return;
     }
 #endif
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_kl_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -2680,6 +2683,9 @@ void vec_dot_iq3_k_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx,
 #endif
 
     GGML_ABORT("not implemented");
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_k_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -2917,6 +2923,9 @@ void  vec_dot_iq3_ks_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
     GGML_ABORT("Not implemented");
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_ks_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -3662,6 +3671,9 @@ void vec_dot_iq6_k_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx,
 
     //*s = sumf;
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq6_k_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 namespace {
@@ -4387,6 +4399,9 @@ void  vec_dot_mxfp4_q8_0_x4(int n, float * s, size_t bs, const void * vx, size_t
     //    //sumf += d * y[ibl].d * sumi;
     //}
     //*s = sumf;
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_mxfp4_q8_0_x4 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_mxfp4_r8_ref(const float * x, block_mxfp4_r8 * y, int64_t k) {
@@ -4478,6 +4493,9 @@ void vec_dot_mxfp4_r8_q8_2_x4(int n, float * s, size_t bs, const void * vx, size
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_mxfp4_r8_q8_2_x4 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 namespace {
@@ -5317,6 +5335,9 @@ void vec_dot_iq4_kss_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_kss_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5407,6 +5428,9 @@ void vec_dot_iq4_nl_r4_q8_0(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_nl_r4_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5540,6 +5564,9 @@ void vec_dot_q4_0_r8_q8_0(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q4_0_r8_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 
@@ -5641,6 +5668,9 @@ void vec_dot_q8_0_r8_q8_0(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q8_0_r8_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5743,6 +5773,9 @@ void vec_dot_q5_0_r4_q8_0(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q5_0_r4_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5846,6 +5879,9 @@ void vec_dot_q6_0_r4_q8_0(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q6_0_r4_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5933,6 +5969,9 @@ void vec_dot_iq4_xs_r8_q8_k(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_xs_r8_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6035,6 +6074,9 @@ void vec_dot_iq4_ks_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_ks_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6414,6 +6456,9 @@ void vec_dot_q4_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q4_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6527,6 +6572,9 @@ void vec_dot_q6_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q6_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 
@@ -6642,6 +6690,9 @@ void vec_dot_q5_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q5_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6773,6 +6824,9 @@ void vec_dot_q3_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q3_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6883,6 +6937,9 @@ void vec_dot_q2_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q2_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6998,6 +7055,9 @@ void vec_dot_iq4_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7136,6 +7196,9 @@ void vec_dot_iq5_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq5_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7257,6 +7320,9 @@ void vec_dot_iq5_ks_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq5_ks_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7356,6 +7422,9 @@ void vec_dot_q8_k_r8_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q8_k_r8_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7443,6 +7512,9 @@ void vec_dot_q8_k_r16_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q8_k_r16_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7762,6 +7834,9 @@ void vec_dot_iq3_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7886,6 +7961,9 @@ void vec_dot_iq2_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 namespace {
@@ -7997,6 +8075,9 @@ void vec_dot_iq2_xxs_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_xxs_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -8079,6 +8160,9 @@ void vec_dot_iq2_xs_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_xs_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -8161,6 +8245,9 @@ void vec_dot_iq2_s_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_s_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -8259,6 +8346,9 @@ void vec_dot_iq3_xxs_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_xxs_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -8355,6 +8445,9 @@ void vec_dot_iq3_s_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_s_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_iq1_s_r4_ref(const float * x, block_iq1_s_r4  * y, int64_t k) {
@@ -8487,6 +8580,9 @@ void vec_dot_iq1_s_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq1_s_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_iq1_m_r4_ref(const float * x, block_iq1_m_r4  * y, int64_t k) {
@@ -8634,6 +8730,9 @@ void vec_dot_iq1_m_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq1_m_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_q8_KV(const float * x, void * vy, int64_t k) {
@@ -9772,6 +9871,9 @@ void vec_dot_iq1_kt_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
     }
 #endif
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq1_kt_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 // ========================================== iq2_kt ====================================================
@@ -10147,6 +10249,9 @@ void vec_dot_iq2_kt_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
     }
 #endif
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_kt_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 namespace {
@@ -10439,6 +10544,9 @@ void vec_dot_iq3_kt_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
     }
 #endif
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_kt_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 // ======================================== iq4_kt
@@ -10734,6 +10842,9 @@ void vec_dot_iq4_kt_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
     }
 #endif
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_kt_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_q1_0_g128_ref(const float * x, block_q1_0_g128  * y, int64_t k) {
