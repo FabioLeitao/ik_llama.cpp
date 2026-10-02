@@ -944,10 +944,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_q4_K,
         .from_float_ref           = (ggml_from_float_t) quantize_row_q4_K_ref,
         .vec_dot                  = ggml_vec_dot_q4_K_q8_K,
+#if GGML_USE_IQK_MULMAT
 #ifdef __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_1_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 0,
@@ -974,10 +978,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_q5_K,
         .from_float_ref           = (ggml_from_float_t) quantize_row_q5_K_ref,
         .vec_dot                  = ggml_vec_dot_q5_K_q8_K,
+#if GGML_USE_IQK_MULMAT
 #ifdef __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_1_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 0,
@@ -1004,12 +1012,15 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_q6_K,
         .from_float_ref           = (ggml_from_float_t) quantize_row_q6_K_ref,
         .vec_dot                  = ggml_vec_dot_q6_K_q8_K,
+#if GGML_USE_IQK_MULMAT
 #ifdef __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
 #endif
-//        .vec_dot_type             = GGML_TYPE_Q8_K,
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
+#endif
         .nrows                    = 1,
         .row_meta_size            = 0,
     },
@@ -1282,10 +1293,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq4_nl,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq4_nl_ref,
         .vec_dot                  = ggml_vec_dot_iq4_nl_q8_0,
+#if GGML_USE_IQK_MULMAT
 #if __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_0,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 0,
@@ -1312,7 +1327,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_mxfp4,
         .from_float_ref           = (ggml_from_float_t)quantize_row_mxfp4_ref,
         .vec_dot                  = vec_dot_mxfp4_q8_0_x4,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
@@ -1329,7 +1344,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_mxfp4_r8,
         .from_float_ref           = (ggml_from_float_t)quantize_row_mxfp4_r8_ref,
         .vec_dot                  = vec_dot_mxfp4_r8_q8_2_x4,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
@@ -1359,7 +1374,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq4_ks_r4,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq4_ks_r4_ref,
         .vec_dot                  = vec_dot_iq4_ks_r4_q8_k,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_K32,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_K,
@@ -1376,7 +1391,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq5_ks_r4,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq5_ks_r4_ref,
         .vec_dot                  = vec_dot_iq5_ks_r4_q8_k,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_K32,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_K,
@@ -1607,10 +1622,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq1_kt,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq1_kt_ref,
         .vec_dot                  = vec_dot_iq1_kt_q8_k,
+#if GGML_USE_IQK_MULMAT
 #if defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 4,
@@ -1624,10 +1643,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq2_kt,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq2_kt_ref,
         .vec_dot                  = vec_dot_iq2_kt_q8_k,
+#if GGML_USE_IQK_MULMAT
 #if defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 4,
@@ -1641,10 +1664,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq3_kt,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq3_kt_ref,
         .vec_dot                  = vec_dot_iq3_kt_q8_k,
+#if GGML_USE_IQK_MULMAT
 #if defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
 //#ifdef __ARM_NEON
 //        .vec_dot_type             = GGML_TYPE_F16,
@@ -1663,10 +1690,14 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_iq4_kt,
         .from_float_ref           = (ggml_from_float_t)quantize_row_iq4_kt_ref,
         .vec_dot                  = vec_dot_iq4_kt_q8_k,
+#if GGML_USE_IQK_MULMAT
 #if defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
+#endif
+#else
+        .vec_dot_type             = GGML_TYPE_Q8_K,
 #endif
         .nrows                    = 1,
         .row_meta_size            = 4,
@@ -1680,7 +1711,7 @@ static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
         .from_float               = quantize_row_q1_0_g128,
         .from_float_ref           = (ggml_from_float_t)quantize_row_q1_0_g128_ref,
         .vec_dot                  = vec_dot_q1_0_g128_q8_0,
-#if defined __AVX2__
+#if GGML_USE_IQK_MULMAT && defined __AVX2__
         .vec_dot_type             = GGML_TYPE_Q8_2_X4,
 #else
         .vec_dot_type             = GGML_TYPE_Q8_0_X4,
@@ -3858,6 +3889,41 @@ inline static __m128 ggml_v_softcap(__m128 x, float s_before, float s_after) {
     const __m128 exp_two_x = ggml_v_expf(_mm_mul_ps(x, _mm_set1_ps(2.f*s_before)));
     const __m128 th = _mm_div_ps(_mm_sub_ps(exp_two_x, one), _mm_add_ps(exp_two_x, one));
     return _mm_mul_ps(th, _mm_set1_ps(s_after));
+}
+
+inline static void ggml_vec_sigmoid_mul_f32(int n, const float * x, const float * y, float * z) {
+    const __m128 zero = _mm_setzero_ps();
+    const __m128 one = _mm_set1_ps(1.0f);
+    int i = 0;
+    _Pragma("GCC unroll 4")
+    for ( ; i + 3 < n; i += 4) {
+        __m128 vx = _mm_loadu_ps(x + i);
+        __m128 vy = _mm_loadu_ps(y + i);
+        __m128 exp_vx = ggml_v_expf(_mm_sub_ps(zero, vx));
+        __m128 denom  = _mm_add_ps(one, exp_vx);
+        __m128 result = _mm_div_ps(vy, denom);
+        _mm_storeu_ps(z + i, result);
+    }
+    for (; i < n; ++i) {
+        z[i] = y[i]/(1.0f + expf(-x[i]));
+    }
+}
+
+inline static void ggml_vec_simd_sigmoid_f32(int n, const float * x, float * y) {
+    const __m128 zero = _mm_setzero_ps();
+    const __m128 one = _mm_set1_ps(1.0f);
+    int i = 0;
+    _Pragma("GCC unroll 4")
+    for ( ; i + 3 < n; i += 4) {
+        __m128 vx = _mm_loadu_ps(x + i);
+        __m128 exp_vx = ggml_v_expf(_mm_sub_ps(zero, vx));
+        __m128 denom  = _mm_add_ps(one, exp_vx);
+        __m128 result = _mm_div_ps(one, denom);
+        _mm_storeu_ps(y + i, result);
+    }
+    if (i < n) {
+        ggml_vec_sigmoid_f32(n - i, y + i, x + i);
+    }
 }
 
 #endif // __ARM_NEON / __AVX2__ / __SSE2__
@@ -6779,7 +6845,15 @@ static struct ggml_tensor * ggml_fused_mul_unary_impl(
         result->src[1] = b;
         return result;
     }
+#if !GGML_USE_IQK_MULMAT
+    if (op != GGML_UNARY_OP_GELU && op != GGML_UNARY_OP_RELU &&
+        op != GGML_UNARY_OP_SILU && op != GGML_UNARY_OP_SIGMOID) {
+        GGML_ABORT("ggml_fused_mul_unary unsupported unary op %d (%s) for non-IQK builds; requires a build with GGML_IQK_MUL_MAT",
+                   (int) op, (op >= 0 && op < GGML_UNARY_OP_COUNT) ? ggml_unary_op_name(op) : "?");
+    }
+#else
     GGML_ASSERT(op == GGML_UNARY_OP_GELU || op == GGML_UNARY_OP_RELU || op == GGML_UNARY_OP_SILU || op == GGML_UNARY_OP_SIGMOID);
+#endif
 
     bool is_node = false;
 
@@ -8165,6 +8239,54 @@ struct ggml_tensor * ggml_mul_mat_id(
     return result;
 }
 
+#if !GGML_USE_IQK_MULMAT
+// Without IQK the fused MOE_FUSED_UP_GATE op has no compute path, so
+// ggml_moe_up_gate / ggml_moe_up_gate_ext express the same computation with
+// mul_mat_id + add_id + fused_mul_unary instead.
+static struct ggml_tensor * ggml_moe_up_gate_fallback(
+            struct ggml_context * ctx,
+            struct ggml_tensor  * as_up,
+            struct ggml_tensor  * as_gate,
+            struct ggml_tensor  * b,
+            struct ggml_tensor  * ids,
+            struct ggml_tensor  * as_up_b,
+            struct ggml_tensor  * as_gate_b,
+            enum   ggml_unary_op  op) {
+    if (as_gate == NULL) {
+        // Combined weight: as_up has ne[1] = 2*n_ff, gate first / up second
+        // (see the combined-tensor handling in
+        // ggml_compute_forward_mul_mat_id_up_gate, where src0_2_cur = base =
+        // gate and src0_1_cur = base + nb02/2 = up). Split the weight tensor
+        // into two views and do two separate mul_mat_ids. The combined bias
+        // in as_up_b uses the same layout, and as_gate_b must be null.
+        GGML_ASSERT(!as_gate_b);
+        GGML_ASSERT(as_up->ne[1] % 2 == 0);
+        const int64_t n_ff = as_up->ne[1] / 2;
+        struct ggml_tensor * gate_w = ggml_view_3d(ctx, as_up, as_up->ne[0], n_ff, as_up->ne[2], as_up->nb[1], as_up->nb[2], 0);
+        struct ggml_tensor * up_w   = ggml_view_3d(ctx, as_up, as_up->ne[0], n_ff, as_up->ne[2], as_up->nb[1], as_up->nb[2], n_ff * as_up->nb[1]);
+        struct ggml_tensor * result_gate = ggml_mul_mat_id(ctx, gate_w, b, ids);
+        struct ggml_tensor * result_up   = ggml_mul_mat_id(ctx, up_w,   b, ids);
+        if (as_up_b) {
+            GGML_ASSERT(as_up_b->ne[0] == 2*n_ff);
+            struct ggml_tensor * gate_bias = ggml_view_2d(ctx, as_up_b, n_ff, as_up_b->ne[1], as_up_b->nb[1], 0);
+            struct ggml_tensor * up_bias   = ggml_view_2d(ctx, as_up_b, n_ff, as_up_b->ne[1], as_up_b->nb[1], n_ff * as_up_b->nb[0]);
+            result_gate = ggml_add_id(ctx, result_gate, gate_bias, ids);
+            result_up   = ggml_add_id(ctx, result_up,   up_bias,   ids);
+        }
+        return ggml_fused_mul_unary(ctx, result_gate, result_up, op);
+    }
+    struct ggml_tensor * result_up   = ggml_mul_mat_id(ctx, as_up,   b, ids);
+    if (as_up_b) {
+        result_up = ggml_add_id(ctx, result_up, as_up_b, ids);
+    }
+    struct ggml_tensor * result_gate = ggml_mul_mat_id(ctx, as_gate, b, ids);
+    if (as_gate_b) {
+        result_gate = ggml_add_id(ctx, result_gate, as_gate_b, ids);
+    }
+    return ggml_fused_mul_unary(ctx, result_gate, result_up, op);
+}
+#endif
+
 struct ggml_tensor * ggml_moe_up_gate(
             struct ggml_context * ctx,
             struct ggml_tensor  * as_up,
@@ -8177,6 +8299,9 @@ struct ggml_tensor * ggml_moe_up_gate(
         struct ggml_tensor * result_gate = ggml_mul_mat_id(ctx, as_gate, b, ids);
         return ggml_fused_mul_unary(ctx, result_gate, result_up, op);
     }
+#if !GGML_USE_IQK_MULMAT
+    return ggml_moe_up_gate_fallback(ctx, as_up, as_gate, b, ids, NULL, NULL, op);
+#endif
     GGML_ASSERT(!ggml_is_transposed(as_up));
     GGML_ASSERT(!as_gate || !ggml_is_transposed(as_gate));
     GGML_ASSERT(ids->type == GGML_TYPE_I32);
@@ -8236,6 +8361,9 @@ struct ggml_tensor * ggml_moe_up_gate_ext(
         }
         return ggml_fused_mul_unary(ctx, result_gate, result_up, op);
     }
+#if !GGML_USE_IQK_MULMAT
+    return ggml_moe_up_gate_fallback(ctx, as_up, as_gate, b, ids, as_up_b, as_gate_b, op);
+#endif
 
     GGML_ASSERT(!ggml_is_transposed(as_up));
     GGML_ASSERT(!as_gate || !ggml_is_transposed(as_gate));
@@ -8280,6 +8408,14 @@ struct ggml_tensor * ggml_fused_up_gate(
         struct ggml_tensor * result_gate = ggml_mul_mat(ctx, gate, b);
         return ggml_fused_mul_unary(ctx, result_gate, result_up, op);
     }
+#if !GGML_USE_IQK_MULMAT
+    // FUSED_UP_GATE has no compute path without IQK; always use the unfused fallback.
+    {
+        struct ggml_tensor * result_up   = ggml_mul_mat(ctx, up,   b);
+        struct ggml_tensor * result_gate = ggml_mul_mat(ctx, gate, b);
+        return ggml_fused_mul_unary(ctx, result_gate, result_up, op);
+    }
+#endif
     GGML_ASSERT(!ggml_is_transposed(up));
     GGML_ASSERT(!ggml_is_transposed(gate));
 
@@ -18110,6 +18246,10 @@ static int ggml_compute_forward_mul_mat(
     const struct ggml_tensor * src0 = dst->src[0];
     const struct ggml_tensor * src1 = dst->src[1];
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_UNUSED(cgraph); // only used for the IQK mul_mat fusion
+#endif
+
     GGML_TENSOR_BINARY_OP_LOCALS
 
     const int ith = params->ith;
@@ -18211,9 +18351,9 @@ static int ggml_compute_forward_mul_mat(
 
     }
 
-    const void * wdata    = (src1->type == vec_dot_type) ? src1->data : params->wdata;
-
     if (src1->type != vec_dot_type && dst->type == GGML_TYPE_F32) {
+#if GGML_USE_IQK_MULMAT
+        const void * wdata    = (src1->type == vec_dot_type) ? src1->data : params->wdata;
         const size_t row_size = ggml_row_size(vec_dot_type, ne10);
         if (iqk_mul_mat_4d(ne01, ne11, ne00,
                     ne02, ne03, ne12, ne13, nb02, nb03, row_size*ne11, row_size*ne11*ne12,
@@ -18230,7 +18370,6 @@ static int ggml_compute_forward_mul_mat(
                 struct ggml_tensor * src0_next = dst_next->src[0];
                 GGML_ASSERT(dst_next->type == GGML_TYPE_F32);
                 GGML_ASSERT(src0_next->ne[0] == ne00);
-                //if (ith == 0) printf("Fusing %s\n", src0_next->name);
                 if (!iqk_mul_mat_4d(src0_next->ne[1], ne11, ne00,
                     src0_next->ne[2], src0_next->ne[3], ne12, ne13, src0_next->nb[2], src0_next->nb[3], row_size*ne11, row_size*ne11*ne12,
                     dst_next->nb[2]/sizeof(float), dst_next->nb[3]/sizeof(float),
@@ -18241,6 +18380,7 @@ static int ggml_compute_forward_mul_mat(
             }
         }
         return node_n;
+#endif
     }
 
     if (ith == 0) {
@@ -24285,6 +24425,20 @@ static void ggml_compute_forward_delta_net_f32(
     const int ith = params->ith;
     const int nth = params->nth;
 
+    // v, g and beta arrive as permuted (non-contiguous) views - see delta_net::build_delta_net()
+    // in src/llama-delta-net.cpp - so every access below goes through the tensor strides.
+    // Logical shapes: v = [head_dim, n_tokens, n_heads, n_seqs], g = [n_tokens, 1, n_heads, n_seqs],
+    // beta = [1, n_tokens, n_heads, n_seqs]. Same convention as ggml_compute_forward_kda_f32().
+    const size_t vnb1 = src2->nb[1]/sizeof(float);
+    const size_t vnb2 = src2->nb[2]/sizeof(float);
+    const size_t vnb3 = src2->nb[3]/sizeof(float);
+    const size_t gnb0 = src3->nb[0]/sizeof(float);
+    const size_t gnb2 = src3->nb[2]/sizeof(float);
+    const size_t gnb3 = src3->nb[3]/sizeof(float);
+    const size_t bnb1 = src4->nb[1]/sizeof(float);
+    const size_t bnb2 = src4->nb[2]/sizeof(float);
+    const size_t bnb3 = src4->nb[3]/sizeof(float);
+
     int repeat_type = dst->op_params[0];
     const int64_t state_step_stride = head_dim * head_dim * n_heads * n_seqs;
     // src7 is the slot the fused-away copy would have written
@@ -24305,12 +24459,14 @@ static void ggml_compute_forward_delta_net_f32(
         GGML_ASSERT(src6->ne[0] >= (n_tokens - 1)*state_step_stride);
     }
 
+#if GGML_USE_IQK_MULMAT
     if (iqk_fused_delta_net(head_dim, n_heads, gqa_ratio, repeat_type, n_tokens, n_seqs,
                 src2->nb[1]/sizeof(float), src2->nb[2]/sizeof(float), src2->nb[3]/sizeof(float),
                 q_data, k_data, v_data, g_data, beta_data, state_in,
                 out_data, state_working, saved_steps, (int) state_step_stride, ith, nth)) {
         return;
     }
+#endif
 
     const int64_t total_heads = n_heads * n_seqs;
     const int64_t heads_per_thread = (total_heads + nth - 1) / nth;
@@ -24328,13 +24484,15 @@ static void ggml_compute_forward_delta_net_f32(
         const int64_t head_idx  = h_idx % n_heads;
         const int64_t head_idx_kq = repeat_type == 0 ? head_idx / gqa_ratio : head_idx % (n_heads/gqa_ratio);
 
-        const int64_t qkv_head_offset  = batch_idx * (head_dim * n_tokens * n_heads) + head_idx * (head_dim * n_tokens);
         const int64_t qkv_head_offset_kq = batch_idx * (head_dim * n_tokens * n_heads/gqa_ratio) + head_idx_kq * (head_dim * n_tokens);
         const int64_t qkv_token_stride = head_dim;
-        const int64_t g_head_offset    = batch_idx * (n_tokens * n_heads) + head_idx * n_tokens;
         const int64_t state_head_offset = batch_idx * (head_dim * head_dim * n_heads) + head_idx * (head_dim * head_dim);
         const int64_t out_head_offset  = batch_idx * (head_dim * n_heads * n_tokens) + head_idx * head_dim;
         const int64_t out_token_stride = head_dim * n_heads;
+
+        const float * v_head    = v_data    + batch_idx * vnb3 + head_idx * vnb2;
+        const float * g_head    = g_data    + batch_idx * gnb3 + head_idx * gnb2;
+        const float * beta_head = beta_data + batch_idx * bnb3 + head_idx * bnb2;
 
         float * state = state_working + state_head_offset;
         for (int64_t i = 0; i < head_dim * head_dim; ++i) {
@@ -24346,10 +24504,10 @@ static void ggml_compute_forward_delta_net_f32(
         for (int64_t t = 0; t < n_tokens; ++t) {
             const float * q_t = q_data + qkv_head_offset_kq + t * qkv_token_stride;
             const float * k_t = k_data + qkv_head_offset_kq + t * qkv_token_stride;
-            const float * v_t = v_data + qkv_head_offset + t * qkv_token_stride;
+            const float * v_t = v_head + t * vnb1;
 
-            const float g_val    = g_data[g_head_offset + t];
-            const float beta_raw = beta_data[g_head_offset + t];
+            const float g_val    = g_head[t * gnb0];
+            const float beta_raw = beta_head[t * bnb1];
 
             float q_norm_sq = 0.0f;
             float k_norm_sq = 0.0f;
@@ -26782,11 +26940,21 @@ static int ggml_compute_forward(struct ggml_compute_params * params, struct ggml
             } break;
         case GGML_OP_MOE_FUSED_UP_GATE:
             {
+#if GGML_USE_IQK_MULMAT
                 ggml_compute_forward_mul_mat_id_up_gate(params, tensor);
+#else
+                // never emitted by the graph builders in this configuration
+                GGML_ABORT("MOE_FUSED_UP_GATE requires a build with GGML_IQK_MUL_MAT");
+#endif
             } break;
         case GGML_OP_FUSED_UP_GATE:
             {
+#if GGML_USE_IQK_MULMAT
                 ggml_compute_forward_mul_mat_up_gate(params, tensor);
+#else
+                // never emitted by the graph builders in this configuration
+                GGML_ABORT("FUSED_UP_GATE requires a build with GGML_IQK_MUL_MAT");
+#endif
             } break;
         case GGML_OP_OUT_PROD:
             {
@@ -26868,7 +27036,8 @@ static int ggml_compute_forward(struct ggml_compute_params * params, struct ggml
             } break;
         case GGML_OP_SOFT_MAX:
             {
-                if (fusion && i + 4 < cgraph->n_nodes &&
+    #if GGML_USE_IQK_MULMAT
+            if (fusion && i + 4 < cgraph->n_nodes &&
                     cgraph->nodes[i+1]->op == GGML_OP_RESHAPE  &&
                     cgraph->nodes[i+2]->op == GGML_OP_ARGSORT  &&
                     cgraph->nodes[i+3]->op == GGML_OP_VIEW     &&
@@ -26880,9 +27049,11 @@ static int ggml_compute_forward(struct ggml_compute_params * params, struct ggml
                             (const float *)cgraph->nodes[i]->data, (float *)cgraph->nodes[i+4]->data, (int32_t *)cgraph->nodes[i+3]->data,
                             params->ith, params->nth);
                     i += 4;
-                } else {
-                    ggml_compute_forward_soft_max(params, tensor);
-                }
+                } else
+#endif
+            {
+                ggml_compute_forward_soft_max(params, tensor);
+            }
             } break;
         case GGML_OP_SOFT_MAX_BACK:
             {
@@ -27051,9 +27222,13 @@ static int ggml_compute_forward(struct ggml_compute_params * params, struct ggml
             } break;
         case GGML_OP_INDEXER_TOPK:
             {
+#if GGML_USE_IQK_MULMAT
                 if (!iqk_indexer_topk(tensor, params->wdata, (barrier_t)ggml_barrier, (void *)params->shared, params->ith, params->nth)) {
                     GGML_ABORT("Fatal error");
                 }
+#else
+                GGML_ABORT("INDEXER_TOPK requires a build with GGML_IQK_MUL_MAT");
+#endif
             } break;
         case GGML_OP_MASK_TOPK:
             {
@@ -29216,7 +29391,10 @@ struct ggml_cplan ggml_graph_plan(const struct ggml_cgraph * cgraph, int n_threa
                 } break;
             case GGML_OP_INDEXER_TOPK:
                 {
-                    cur = iqk_idx_topk_work_buffer_size(node, n_tasks);
+#if GGML_USE_IQK_MULMAT
+                    size_t size = iqk_idx_topk_work_buffer_size(node, n_tasks);
+                    cur = MAX(cur, size);
+#endif
                 } break;
             case GGML_OP_DS4_COMP:
                 {

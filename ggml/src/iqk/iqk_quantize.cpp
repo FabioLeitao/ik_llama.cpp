@@ -934,7 +934,7 @@ void quantize_row_q8_0_x4(const float * x, void * vy, int64_t k) {
             }
         }
     }
-#else
+#elif defined(__AVX2__)
     for (int i = 0; i < nb; i++) {
         int i4 = i/4, ir = i%4;
         // Load elements into 4 AVX vectors
@@ -980,14 +980,10 @@ void quantize_row_q8_0_x4(const float * x, void * vy, int64_t k) {
         __m256i i3 = _mm256_cvtps_epi32( v3 );
 
         // Convert int32 to int16
-        i0 = _mm256_packs_epi32( i0, i1 );  // 0, 1, 2, 3,  8, 9, 10, 11,  4, 5, 6, 7, 12, 13, 14, 15
-        i2 = _mm256_packs_epi32( i2, i3 );  // 16, 17, 18, 19,  24, 25, 26, 27,  20, 21, 22, 23, 28, 29, 30, 31
-                                            // Convert int16 to int8
-        i0 = _mm256_packs_epi16( i0, i2 );  // 0, 1, 2, 3,  8, 9, 10, 11,  16, 17, 18, 19,  24, 25, 26, 27,  4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+        i0 = _mm256_packs_epi32( i0, i1 );
+        i2 = _mm256_packs_epi32( i2, i3 );
+        i0 = _mm256_packs_epi16( i0, i2 );
 
-        // We got our precious signed bytes, but the order is now wrong
-        // These AVX2 pack instructions process 16-byte pieces independently
-        // The following instruction is fixing the order
         const __m256i perm = _mm256_setr_epi32( 0, 4, 1, 5, 2, 6, 3, 7 );
         i0 = _mm256_permutevar8x32_epi32( i0, perm );
 
@@ -995,6 +991,32 @@ void quantize_row_q8_0_x4(const float * x, void * vy, int64_t k) {
             _mm256_storeu_si256((__m256i *)y4[i4].qs + ir, i0);
         } else {
             _mm256_storeu_si256((__m256i *)y[i].qs, i0);
+        }
+    }
+#else
+    for (int i = 0; i < nb; i++) {
+        int i4 = i/4, ir = i%4;
+        float amax = 0.0f;
+        for (int j = 0; j < QK8_0; j++) {
+            float a = fabsf(x[i*QK8_0 + j]);
+            if (a > amax) amax = a;
+        }
+        const float d = amax / 127.0f;
+        const float id = d > 0 ? 1.0f/d : 0.0f;
+        if (i < nb4) {
+            y4[i4].d[ir] = GGML_FP32_TO_FP16(d);
+        } else {
+            y[i].d = GGML_FP32_TO_FP16(d);
+        }
+        for (int j = 0; j < QK8_0; j++) {
+            int val = (int)roundf(x[i*QK8_0 + j] * id);
+            if (val > 127) val = 127;
+            if (val < -128) val = -128;
+            if (i < nb4) {
+                y4[i4].qs[ir*QK8_0 + j] = (int8_t)val;
+            } else {
+                y[i].qs[j] = (int8_t)val;
+            }
         }
     }
 #endif
@@ -1068,7 +1090,7 @@ void quantize_row_q8_1_x4_T(const float * x, Block * y, int64_t k) {
             }
         }
     }
-#else
+#elif defined(__AVX2__)
     for (int i = 0; i < nb; i++) {
         int i4 = i/4, ir = i%4;
         // Load elements into 4 AVX vectors
@@ -1147,14 +1169,10 @@ void quantize_row_q8_1_x4_T(const float * x, Block * y, int64_t k) {
         }
 
         // Convert int32 to int16
-        i0 = _mm256_packs_epi32( i0, i1 );  // 0, 1, 2, 3,  8, 9, 10, 11,  4, 5, 6, 7, 12, 13, 14, 15
-        i2 = _mm256_packs_epi32( i2, i3 );  // 16, 17, 18, 19,  24, 25, 26, 27,  20, 21, 22, 23, 28, 29, 30, 31
-                                            // Convert int16 to int8
-        i0 = _mm256_packs_epi16( i0, i2 );  // 0, 1, 2, 3,  8, 9, 10, 11,  16, 17, 18, 19,  24, 25, 26, 27,  4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+        i0 = _mm256_packs_epi32( i0, i1 );
+        i2 = _mm256_packs_epi32( i2, i3 );
+        i0 = _mm256_packs_epi16( i0, i2 );
 
-        // We got our precious signed bytes, but the order is now wrong
-        // These AVX2 pack instructions process 16-byte pieces independently
-        // The following instruction is fixing the order
         const __m256i perm = _mm256_setr_epi32( 0, 4, 1, 5, 2, 6, 3, 7 );
         i0 = _mm256_permutevar8x32_epi32( i0, perm );
 
@@ -1162,6 +1180,59 @@ void quantize_row_q8_1_x4_T(const float * x, Block * y, int64_t k) {
             _mm256_storeu_si256((__m256i *)y4[i4].qs + ir, i0);
         } else {
             _mm256_storeu_si256((__m256i *)y[i].qs, i0);
+        }
+    }
+#else
+    for (int i = 0; i < nb; i++) {
+        int i4 = i/4, ir = i%4;
+        float amax = 0.0f;
+        for (int j = 0; j < QK8_1; j++) {
+            float a = fabsf(x[i*QK8_1 + j]);
+            if (a > amax) amax = a;
+        }
+        float d = amax / 127.0f;
+        if constexpr (std::is_same_v<Block, block_q8_1>) {
+            if (i < nb4) {
+                y4[i4].d[ir] = GGML_FP32_TO_FP16(d);
+            } else {
+                y[i].d = GGML_FP32_TO_FP16(d);
+            }
+        } else {
+            auto t = GGML_FP32_TO_BF16(d);
+            d = ggml_bf16_to_fp32(t);
+            if (i < nb4) {
+                y4[i4].d[ir] = t.bits;
+            } else {
+                y[i].d = t.bits;
+            }
+        }
+        const float id = d > 0 ? 1.0f/d : 0.0f;
+        int sum = 0;
+        for (int j = 0; j < QK8_1; j++) {
+            int val = (int)roundf(x[i*QK8_1 + j] * id);
+            if (val > 127) val = 127;
+            if (val < -128) val = -128;
+            if (i < nb4) {
+                y4[i4].qs[ir*QK8_1 + j] = (int8_t)val;
+            } else {
+                y[i].qs[j] = (int8_t)val;
+            }
+            sum += val;
+        }
+        if constexpr (std::is_same_v<Block, block_q8_1>) {
+            if (i < nb4) {
+                y4[i4].d[ir+4] = GGML_FP32_TO_FP16(d * sum);
+            } else {
+                y[i].s = GGML_FP32_TO_FP16(d * sum);
+            }
+        } else {
+            if (i < nb4) {
+                auto i16 = (int16_t *)y4[i4].d;
+                i16[ir+4] = sum;
+            } else {
+                auto i16 = (int16_t *)&y[i].s;
+                i16[0] = sum;
+            }
         }
     }
 #endif
@@ -2289,6 +2360,9 @@ void vec_dot_iq2_kl_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
         return;
     }
 #endif
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_kl_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -2585,6 +2659,9 @@ void vec_dot_iq3_k_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx,
 #endif
 
     GGML_ABORT("not implemented");
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_k_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -2822,6 +2899,9 @@ void  vec_dot_iq3_ks_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
     GGML_ABORT("Not implemented");
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_ks_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -3567,6 +3647,9 @@ void vec_dot_iq6_k_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx,
 
     //*s = sumf;
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq6_k_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 namespace {
@@ -4281,6 +4364,9 @@ void  vec_dot_mxfp4_q8_0_x4(int n, float * s, size_t bs, const void * vx, size_t
     //    //sumf += d * y[ibl].d * sumi;
     //}
     //*s = sumf;
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_mxfp4_q8_0_x4 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_mxfp4_r8_ref(const float * x, block_mxfp4_r8 * y, int64_t k) {
@@ -4372,6 +4458,9 @@ void vec_dot_mxfp4_r8_q8_2_x4(int n, float * s, size_t bs, const void * vx, size
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_mxfp4_r8_q8_2_x4 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 namespace {
@@ -5211,6 +5300,9 @@ void vec_dot_iq4_kss_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_kss_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5301,6 +5393,9 @@ void vec_dot_iq4_nl_r4_q8_0(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_nl_r4_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5434,6 +5529,9 @@ void vec_dot_q4_0_r8_q8_0(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q4_0_r8_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 
@@ -5535,6 +5633,9 @@ void vec_dot_q8_0_r8_q8_0(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q8_0_r8_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5637,6 +5738,9 @@ void vec_dot_q5_0_r4_q8_0(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q5_0_r4_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5740,6 +5844,9 @@ void vec_dot_q6_0_r4_q8_0(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q6_0_r4_q8_0 requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5827,6 +5934,9 @@ void vec_dot_iq4_xs_r8_q8_k(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_xs_r8_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -5929,6 +6039,9 @@ void vec_dot_iq4_ks_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_ks_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6168,6 +6281,9 @@ void vec_dot_q4_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q4_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6281,6 +6397,9 @@ void vec_dot_q6_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q6_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 
@@ -6396,6 +6515,9 @@ void vec_dot_q5_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q5_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6527,6 +6649,9 @@ void vec_dot_q3_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q3_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6637,6 +6762,9 @@ void vec_dot_q2_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q2_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6752,6 +6880,9 @@ void vec_dot_iq4_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -6890,6 +7021,9 @@ void vec_dot_iq5_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq5_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7011,6 +7145,9 @@ void vec_dot_iq5_ks_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq5_ks_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7110,6 +7247,9 @@ void vec_dot_q8_k_r8_q8_k(int n, float * s, size_t bs, const void * vx, size_t b
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q8_k_r8_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7197,6 +7337,9 @@ void vec_dot_q8_k_r16_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_q8_k_r16_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7277,11 +7420,11 @@ static void repack_q8_KV(int nrows, int n_per_row, const char * cx, char * cy, [
             vst1q_s8_x2(qy + 64 + 128*ib, m2);
             vst1q_s8_x2(qy + 96 + 128*ib, m3);
 #else
-            // TODO
             for (int l = 0; l < 4; ++l) {
-                for (int k = 0; k < 8; ++k) for (int i = 0; i < 4; ++i) {
-                    y[ib].qs[32*l+4*k+i+  0] = x8[k][ib].qs[i+4*l+ 0];
-                    y[ib].qs[32*l+4*k+i+128] = x8[k][ib].qs[i+4*l+16];
+                for (int k = 0; k < 8; ++k) {
+                    for (int i = 0; i < 4; ++i) {
+                        qy[128*ib + 32*l + 4*k + i] = x8[k][16*ib + 4*l + i];
+                    }
                 }
             }
 #endif
@@ -7516,6 +7659,9 @@ void vec_dot_iq3_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7640,6 +7786,9 @@ void vec_dot_iq2_k_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_k_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 namespace {
@@ -7751,6 +7900,9 @@ void vec_dot_iq2_xxs_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_xxs_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7833,6 +7985,9 @@ void vec_dot_iq2_xs_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_xs_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -7915,6 +8070,9 @@ void vec_dot_iq2_s_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_s_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -8013,6 +8171,9 @@ void vec_dot_iq3_xxs_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_xxs_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 //
@@ -8109,6 +8270,9 @@ void vec_dot_iq3_s_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_s_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_iq1_s_r4_ref(const float * x, block_iq1_s_r4  * y, int64_t k) {
@@ -8241,6 +8405,9 @@ void vec_dot_iq1_s_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq1_s_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_iq1_m_r4_ref(const float * x, block_iq1_m_r4  * y, int64_t k) {
@@ -8388,6 +8555,9 @@ void vec_dot_iq1_m_r4_q8_k(int n, float * s, size_t bs, const void * vx, size_t 
     GGML_UNUSED(bs);
     GGML_UNUSED(bx);
     GGML_UNUSED(by);
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq1_m_r4_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_q8_KV(const float * x, void * vy, int64_t k) {
@@ -9519,6 +9689,9 @@ void vec_dot_iq1_kt_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
     }
 #endif
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq1_kt_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 // ========================================== iq2_kt ====================================================
@@ -9811,6 +9984,9 @@ void vec_dot_iq2_kt_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
     }
 #endif
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq2_kt_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 namespace {
@@ -10091,6 +10267,9 @@ void vec_dot_iq3_kt_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
     }
 #endif
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq3_kt_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 // ======================================== iq4_kt
@@ -10350,6 +10529,9 @@ void vec_dot_iq4_kt_q8_k(int n, float * s, size_t bs, const void * vx, size_t bx
     }
 #endif
 
+#if !GGML_USE_IQK_MULMAT
+    GGML_ABORT("vec_dot_iq4_kt_q8_k requires a build with GGML_IQK_MUL_MAT");
+#endif
 }
 
 void quantize_row_q1_0_g128_ref(const float * x, block_q1_0_g128  * y, int64_t k) {
