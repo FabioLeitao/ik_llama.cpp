@@ -325,7 +325,7 @@ struct mtmd_context {
                 img_end = "<|media_end|>";
             }
         }
-        else if (proj == PROJECTOR_TYPE_DEEPSEEK4V) {
+        else if (proj == PROJECTOR_TYPE_DEEPSEEK4V || proj == PROJECTOR_TYPE_DEEPSEEK41) {
             // markers are learned embeddings emitted by the encoder graph
             img_beg = "";
             img_end = "";
@@ -438,7 +438,7 @@ struct mtmd_tokenizer {
             size_t n_bitmaps) : ctx(ctx), bitmaps(bitmaps, bitmaps + n_bitmaps) {
         add_special   = text->add_special;
         parse_special = text->parse_special;
-        input_text    = text->text;
+        input_text.assign(text->text, text->text_len);
         vocab         = llama_model_get_vocab(ctx->text_model);
 
         // for compatibility, we convert image marker to media marker
