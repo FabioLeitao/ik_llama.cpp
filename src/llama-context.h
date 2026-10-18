@@ -7,6 +7,7 @@
 #include "llama-spec-features.h"
 
 struct llama_model;
+class llama_moe_cache;
 
 #include <vector>
 #include <map>
@@ -138,7 +139,7 @@ struct llama_kv_cache {
     std::vector<struct ggml_tensor *> kr_l;
 
     // Pooled block keys for Qwen sparse attention: [indexer_head_size, kv_size/compress_ratio],
-    // already normalised and rotated. Empty unless the model scores blocks.
+    // already normalized and rotated. Empty unless the model scores blocks.
     std::vector<struct ggml_tensor *> kp_l;
 
     // When true, the delta_net graph builder will enable per-step SSM state saves
@@ -214,7 +215,7 @@ struct llama_kv_cache {
         int fixed_spec_mode = LLAMA_SPEC_CKPT_NONE;
         int32_t fixed_max_tokens = 0;
 
-        // Serialised sequence state for CPU mode
+        // Serialized sequence state for CPU mode
         std::vector<uint8_t> cpu_state_data;
 
         // Private DSV4 state snapshot used by GPU/CPU fallback modes.
@@ -326,6 +327,9 @@ struct llama_control_vector {
     struct ggml_tensor * apply_to(struct ggml_context * ctx, struct ggml_tensor * cur, int  il) const {
         ggml_tensor * layer_dir = tensor_for(il);
         if (layer_dir != nullptr) {
+            if (layer_dir->type != cur->type && layer_dir->type == GGML_TYPE_F32) {
+                cur = ggml_cast(ctx, cur, GGML_TYPE_F32);
+            }
             cur = ggml_add(ctx, cur, layer_dir);
         }
         return cur;
@@ -360,6 +364,7 @@ struct llama_context {
     std::unordered_map<struct llama_lora_adapter *, float> lora_adapters;
 
     std::vector<ggml_backend_t> backends;
+    std::unique_ptr<llama_moe_cache> moe_cache;
 #ifdef GGML_USE_METAL
     ggml_backend_t backend_metal = nullptr;
 #endif
@@ -411,6 +416,9 @@ struct llama_context {
     // memory buffers used to evaluate the model
     std::vector<uint8_t> buf_compute_meta;
     ggml_backend_sched_t sched = nullptr;
+
+    static bool sched_copy_moe_cache(ggml_backend_t backend, const ggml_tensor * src,
+            ggml_tensor * dst, ggml_cgraph * graph, ggml_backend_sched_copy_phase phase, void * user_data);
 
     ggml_abort_callback abort_callback      = nullptr;
     void *              abort_callback_data = nullptr;
@@ -633,6 +641,10 @@ struct llama_context {
         comp_plan csa_plan;
         comp_plan hca_plan;
         comp_plan lid_plan;
+        // compressor state ring -> per-token state rows of the current graph (per-step checkpoint capture)
+        std::map<const ggml_tensor *, ggml_tensor *> capture_rows;
+        // compressor state rings the current graph persists into
+        std::set<const ggml_tensor *> persisted_rings;
 
         std::vector<float> csa_mask_data;
         std::vector<float> hca_mask_data;

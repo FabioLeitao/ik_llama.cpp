@@ -54,6 +54,9 @@ struct llama_model_loader {
     bool merge_up_gate_exps = false;
     bool defer_experts = false;
     bool defer_ple = false;
+    // Explicit --no-mmap with deferred tables: copy dense weights out, alias deferred only.
+    bool defer_copy_dense = false;
+    std::vector<ggml_backend_buffer_type_t> integrated_bufts;
 
     llama_files files;
     llama_ftype ftype;
@@ -201,6 +204,14 @@ struct llama_model_loader {
 
     void apply_ple_mmap_policy() const;
 
+    // File holds deferred ranges (PLE, engram): skip prefetch and pinning for it.
+    bool file_has_deferred_ple(int idx) const;
+
+    bool ple_range_overlaps(int idx, size_t first, size_t last) const;
+
+    // deferred bytes of the index inside [first, last) of file idx
+    size_t ple_deferred_bytes_in(int idx, size_t first, size_t last) const;
+
     void get_mapping_range(size_t * first, size_t * last, void ** addr, int idx, ggml_context * ctx) const;
 
     // for backwards compatibility, does not support ggml-backend
@@ -210,7 +221,7 @@ struct llama_model_loader {
     size_t size_data = 0;
     std::vector<std::pair<size_t, size_t>> mmaps_used;
 
-    // Returns false if cancelled by progress_callback
+    // Returns false if canceled by progress_callback
     bool load_all_data(
             struct ggml_context * ctx,
             struct llama_model * model,

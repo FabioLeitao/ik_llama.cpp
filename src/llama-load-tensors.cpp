@@ -42,7 +42,9 @@ struct create_tensors_helper : public create_tensors_helper_interface {
     bool create_tensors() override;
 
     bool create_llama_tensors(const LLM_TN & tn);
-    
+
+    bool create_nanbeige_tensors(const LLM_TN & tn);
+
     bool create_k2horizon_tensors(const LLM_TN & tn);
 
     bool create_muse_glimmer_tensors(const LLM_TN & tn);
@@ -626,6 +628,29 @@ bool create_tensors_helper::create_llama_tensors(const LLM_TN & tn) {
             }
         }
     }
+    return use_mmap_buffer;
+}
+
+bool create_tensors_helper::create_nanbeige_tensors(const LLM_TN & tn) {
+    bool use_mmap_buffer = create_llama_tensors(tn);
+
+    auto & hparams = model.hparams;
+    const uint32_t n_phys = hparams.n_layer_phys;
+    const uint32_t n_all  = hparams.n_layer_all;
+
+    if (n_all > n_phys && n_phys > 0) {
+        // alias the physical layers and buffer types to the unrolled count.
+        model.layers.resize(n_all);
+        model.buft_layer.resize(n_all);
+        for (uint32_t j = 1; j < hparams.n_loops; ++j) {
+            for (uint32_t i = 0; i < n_phys; ++i) {
+                model.layers[j*n_phys + i]     = model.layers[i];
+                model.buft_layer[j*n_phys + i] = model.buft_layer[i];
+            }
+        }
+        hparams.n_layer = n_all;
+    }
+
     return use_mmap_buffer;
 }
 
@@ -1830,7 +1855,7 @@ bool create_tensors_helper::create_qwen4exp_tensors(const LLM_TN & tn) {
     const int trunk_flags = mtp_only
         ? llama_model_loader::TENSOR_SKIP | llama_model_loader::TENSOR_NOT_REQUIRED : 0;
 
-    // The wide residual is normalised and collapsed by a hyper-connection mix rather
+    // The wide residual is normalized and collapsed by a hyper-connection mix rather
     // than by an output_norm, so this architecture carries none.
     const int out_mixer_flags = mtp_only ? llama_model_loader::TENSOR_NOT_REQUIRED : 0;
     model.hc_head_norm = create_tensor(ctx_output, tn(LLM_TENSOR_HC_HEAD_NORM, "weight"), {hc_dim}, out_mixer_flags);
@@ -2345,16 +2370,16 @@ bool create_tensors_helper::create_mimo2_tensors(const LLM_TN & tn) {
             layer.wk = create_tensor(ctx_split, tn(LLM_TENSOR_ATTN_K, "weight", i), { n_embd, n_embd_k_gqa }, flags);
             layer.wv = create_tensor(ctx_split, tn(LLM_TENSOR_ATTN_V, "weight", i), { n_embd, n_embd_v_gqa }, flags);
         }
-	else {
+        else {
             if (!is_mtp_layer) {
                 unmerge_qkv(tn, i, 0);
             }
-	    else {
+            else {
                 layer.wqkv = create_tensor(ctx_split, tn(LLM_TENSOR_ATTN_QKV, "weight", i), {n_embd, (n_embd_head_k * n_head) + n_embd_k_gqa + n_embd_v_gqa}, flags);
             }
         }
         layer.wo = create_tensor(ctx_split, tn(LLM_TENSOR_ATTN_OUT, "weight", i), { n_embd_head_v * n_head, n_embd }, flags);
-	
+
 
         auto ffn_ctx = model.split_mode == LLAMA_SPLIT_MODE_GRAPH ? ctx_split : ctx_layer;
         layer.ffn_norm = create_tensor(ffn_ctx, tn(LLM_TENSOR_FFN_NORM, "weight", i), {n_embd}, flags);
@@ -5851,6 +5876,8 @@ bool create_tensors_helper::create_tensors() {
     switch (model.arch) {
         case LLM_ARCH_K2_HORIZON:
             use_mmap_buffer = create_k2horizon_tensors(tn); break;
+        case LLM_ARCH_NANBEIGE:
+            use_mmap_buffer = create_nanbeige_tensors(tn); break;
         case LLM_ARCH_LLAMA:
         case LLM_ARCH_REFACT:
         case LLM_ARCH_MINICPM:

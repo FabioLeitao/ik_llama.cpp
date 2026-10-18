@@ -1,4 +1,5 @@
 #include "server-task.h"
+#include "server-decision.h"
 #include "server-queue.h"
 #include "speculative.h"
 #include "json-schema-to-grammar.h"
@@ -87,7 +88,7 @@ struct server_slot {
 
     std::string oaicompat_model;
     std::string stopping_word;
-    stop_type stop;
+    stop_type stop = STOP_TYPE_NONE;
 
     // For context rewind/ token buffer
     size_t n_buffer = 0;
@@ -101,7 +102,7 @@ struct server_slot {
     completion_token_outputs token_buffer;
     float ban_phrases_bias = 0;
     int32_t banned_n = 1;
-	std::map<int32_t, std::set<llama_token>> positional_bans;
+    std::map<int32_t, std::set<llama_token>> positional_bans;
 
     // allowlist
     std::vector<std::vector<std::tuple<uint32_t, uint32_t, std::string, float>>> allow_rules_prev;
@@ -255,6 +256,8 @@ struct server_context {
     // multimodal
     mtmd_context* mctx = nullptr;
 
+    server_decision_context decision;
+
     int32_t n_ctx; // total context for all clients / slots
 
     // system prompt
@@ -331,6 +334,8 @@ struct server_context {
     void send_final_response(server_slot& slot);
 
     void send_embedding(const server_slot& slot, const llama_batch& batch);
+
+    void send_decision(const server_slot& slot, int32_t i_batch);
 
     void apply_server_biases(server_slot& slot);
 
